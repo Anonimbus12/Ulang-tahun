@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Selamat Ulang Tahun, Sayang!</title>
+  <style>
+    :root{ --bg:#0f172a; --card:#0b1220; --accent:#ff6b81; --glass: rgba(255,255,255,0.06)}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial; background: radial-gradient(circle at 10% 10%, #0b1220 0%, #071226 40%, #020617 100%); color:#fff; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px}
+    .card{width:100%; max-width:980px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.12)); border-radius:18px; padding:28px; box-shadow:0 10px 40px rgba(2,6,23,0.7); position:relative; overflow:hidden}
+    header{display:flex; gap:18px; align-items:center}
+    .avatar{width:110px;height:110px;border-radius:18px;flex:0 0 110px;background:linear-gradient(135deg,#ff8da1,#ffc3c3);display:flex;align-items:center;justify-content:center;font-weight:700;color:#2b0226;font-size:18px}
+    h1{margin:0;font-size:28px;line-height:1.05}
+    p.lead{margin:6px 0 0 0; color:#cbd5e1}
+    .actions{margin-top:18px;display:flex;gap:12px}
+    button{background:linear-gradient(90deg,var(--accent),#ff9fb3);border:0;padding:10px 14px;border-radius:10px;color:#111;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(255,107,129,0.16)}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff}
+    .message{margin-top:18px;background:var(--glass);padding:14px;border-radius:12px;display:none}
+    .photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:16px}
+    .photos img{width:100%;height:120px;object-fit:cover;border-radius:10px;display:block}
+    canvas.confetti{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+    .balloons{position:absolute;right:-50px;top:-40px;opacity:0.85}
+    .balloon{width:64px;height:88px;border-radius:50% 50% 45% 45%;background:linear-gradient(180deg,#ffb3c1,#ff6b81);position:relative;margin:18px;display:inline-block;transform-origin:center bottom;animation:float 6s ease-in-out infinite}
+    @keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-18px)}100%{transform:translateY(0)}}
+    footer{margin-top:18px;color:#94a3b8;font-size:13px}
+    @media (max-width:640px){header{flex-direction:column;align-items:flex-start}.avatar{width:86px;height:86px}}
+  </style>
+</head>
+<body>
+  <div class="card" role="main">
+    <canvas class="confetti" id="confetti"></canvas>
+    <div class="balloons" aria-hidden="true">
+      <span class="balloon" style="transform:translateY(0) scale(1.05)"></span>
+      <span class="balloon" style="background:linear-gradient(180deg,#ffd59a,#ff9f6b);transform:translateY(8px) scale(0.95)"></span>
+      <span class="balloon" style="background:linear-gradient(180deg,#c7b3ff,#8f6bff);transform:translateY(4px)"></span>
+    </div>
+    <header>
+      <div class="avatar" id="avatar">💖</div>
+      <div style="flex:1">
+        <h1 id="title">Selamat Ulang Tahun, Sayang! 🎂</h1>
+        <p class="lead">Hari istimewa untukmu — semoga semua impianmu terwujud. Klik tombol di bawah untuk kejutan!</p>
+        <div class="actions">
+          <button id="revealBtn">Buka Kejutan</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="message" id="message" aria-hidden="true">
+      <h2 style="margin:0 0 8px 0">Untukmu, <span id="namePlaceholder">Sayang</span></h2>
+      <p style="margin:0 0 8px 0; color:#dbeafe">Hari ini aku ingat lagi semua tawa dan momen kecil yang membuatku jatuh cinta padamu. Semoga hari ini penuh kejutan manis, pelukan hangat, dan kue yang terlalu lezat untuk dibagi.</p>
+      <p style="margin:0 0 8px 0; color:#fce7f3"><strong>Love,</strong> [Octavia Rahmadani]</p>
+    </section>
+
+    <div class="photos" id="photos">
+      <!-- Ganti src dengan foto kalian -->
+      <img src="IMG-20250921-WA0030.jpg" alt="Foto dari Google Drive">
+      <img src="IMG-20250921-WA0034.jpg" alt="Foto dari Google Drive">
+      <img src="IMG-20250921-WA0038.jpg" alt="Foto dari Google Drive">
+      <img src="https://github.com/Anonimbus12/Ulang-tahun/commits/Index.html" alt="Foto dari Google Drive">
+    </div>
+  </div>
+
+  <!-- Musik background (pastikan ada file mp3 di folder yg sama) -->
+  <audio id="bgm" loop preload="auto">
+    <source src="lagu.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    // ===== Confetti =====
+    const cnv = document.getElementById('confetti');
+    const ctx = cnv.getContext('2d');
+    function resize(){
+      cnv.width = cnv.offsetWidth * devicePixelRatio;
+      cnv.height = cnv.offsetHeight * devicePixelRatio;
+      ctx.setTransform(1,0,0,1,0,0); // reset transform
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+    } 
+    window.addEventListener('resize', resize); 
+    resize();
+
+    function random(min,max){return Math.random()*(max-min)+min}
+    let confettis = [];
+    function spawnConfetti(n=60){
+      confettis = [];
+      for(let i=0;i<n;i++){
+        confettis.push({
+          x:random(0,cnv.offsetWidth),
+          y:random(-20,cnv.offsetHeight/2),
+          r:random(6,12),
+          d:random(1,4),
+          tilt:random(-10,10),
+          color:['#ff6b81','#ffd59a','#c7b3ff','#9ef0e5'][Math.floor(Math.random()*4)]
+        });
+      }
+    }
+    function draw(){
+      ctx.clearRect(0,0,cnv.width,cnv.height);
+      for(let f of confettis){
+        ctx.beginPath();
+        ctx.fillStyle=f.color;
+        ctx.save();
+        ctx.translate(f.x,f.y);
+        ctx.rotate(f.tilt * Math.PI/180);
+        ctx.fillRect(-f.r/2, -f.r/2, f.r, f.r*1.6);
+        ctx.restore();
+        f.y += f.d + Math.sin(f.d);
+        f.x += Math.sin(f.d);
+        f.tilt += 0.5;
+        if(f.y>cnv.offsetHeight+20) f.y = -10;
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    // ===== Buttons =====
+    const revealBtn = document.getElementById('revealBtn');
+    const message = document.getElementById('message');
+    const bgm = document.getElementById('bgm');
+
+    revealBtn.addEventListener('click',()=>{
+      if(message.style.display === 'block') return;
+      message.style.display = 'block';
+      spawnConfetti(140);
+      // gentle pulse
+      document.getElementById('title').animate(
+        [{transform:'scale(1)'},{transform:'scale(1.03)'},{transform:'scale(1)'}],
+        {duration:900,iterations:1}
+      );
+      // play musik
+      if(bgm) bgm.play().catch(()=>{});
+    });
+
+    // ===== URL Params =====
+    function qs(name){ return new URLSearchParams(location.search).get(name); }
+    const name = qs('name'); 
+    const from = qs('from'); 
+
+    if(name){
+      document.getElementById('namePlaceholder').textContent = decodeURIComponent(name);
+      document.getElementById('title').textContent = 'Selamat Ulang Tahun, '+decodeURIComponent(name)+' 🎉';
+    }
+    if(from){
+      const strong = document.querySelector('#message p strong');
+      if(strong){ strong.textContent = 'Love,'; }
+      const p = document.querySelector('#message p:nth-of-type(2)');
+      if(p){ p.innerHTML = '<strong>Love,</strong> '+decodeURIComponent(from); }
+    }
+
+    // ===== Accessibility =====
+    revealBtn.addEventListener('keyup', (e)=>{
+      if(e.key === 'Enter') revealBtn.click();
+    });
+  </script>
+</body>
+  </html>
